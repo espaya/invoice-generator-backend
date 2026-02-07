@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->group('api', [
             EnsureFrontendRequestsAreStateful::class,  // ✅ Sanctum SPA auth
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \Illuminate\Routing\Middleware\ThrottleRequests::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
