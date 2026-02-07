@@ -129,7 +129,7 @@ return [
 
     'cookie' => env(
         'SESSION_COOKIE',
-        Str::slug((string) env('APP_NAME', 'laravel')).'-session'
+        Str::slug((string) env('APP_NAME', 'laravel')) . '-session'
     ),
 
     /*
@@ -213,5 +213,8 @@ return [
     */
 
     'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
+
+    'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS')),
+
 
 ];

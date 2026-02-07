@@ -18,7 +18,7 @@ class AuthController extends Controller
             'password.required' => 'Password is required',
         ]);
 
-        if (!Auth::attempt($request->only("email", "password"))) {
+        if (!Auth::guard('web')->attempt($request->only("email", "password"))) {
             return response()->json([
                 "message" => "Invalid credentials"
             ], 401);
@@ -29,14 +29,21 @@ class AuthController extends Controller
         $user = Auth::user();
 
         $redirect_url = match ($user->role) {
-            'admin' => 'admin/dashboard',
-            'user' => 'user/dashboard',
+            'admin' => '/admin/dashboard',
+            'user' => '/user/dashboard',
             default => '/',
         };
 
+
         return response()->json([
             "message" => "Login successful",
-            "user" => $user,
+            "user" => [
+                "id" => $user->id,
+                "name" => $user->name,
+                "email" => $user->email,
+                "role" => $user->role,
+            ],
+
             "redirect_url" => $redirect_url
         ], 200);
     }
@@ -54,6 +61,11 @@ class AuthController extends Controller
 
     public function user(Request $request)
     {
-        return response()->json($request->user());
+        return response()->json([
+            "id" => $request->user()->id,
+            "name" => $request->user()->name,
+            "email" => $request->user()->email,
+            "role" => $request->user()->role,
+        ]);
     }
 }
