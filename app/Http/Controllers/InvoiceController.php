@@ -18,7 +18,9 @@ class InvoiceController extends Controller
     {
         try {
 
-            $invoices = Auth::user()->invoices()->with('customer', 'items')->paginate(20);
+            $invoices = Invoice::with('customer', 'items')
+                ->orderBy('created_at', 'desc')
+                ->paginate(20);
 
             if ($invoices->isEmpty()) {
                 return response()->json(['message' => 'No invoices found.'], 404);
@@ -104,10 +106,13 @@ class InvoiceController extends Controller
                 $customerId = $customer->id;
             }
 
+            // prefix 
+            $prefix = Auth::user()->companySetting->invoice_prefix ?? "INV";
+
             // 2️⃣ Generate unique invoice number
             $lastInvoice = Invoice::latest()->first();
             $nextId = $lastInvoice ? $lastInvoice->id + 1 : 1;
-            $invoiceNumber = 'INV-' . date('Ymd') . '-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
+            $invoiceNumber = $prefix . date('Ymd') . '-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
 
             // 3️⃣ Save invoice
             $invoice = auth()->user()->invoices()->create([
@@ -133,6 +138,8 @@ class InvoiceController extends Controller
                 ]);
             }
 
+            // Send invoice creation email (optional)
+
 
             DB::commit();
 
@@ -144,6 +151,22 @@ class InvoiceController extends Controller
             DB::rollBack();
             Log::error('Error creating invoice: ' . $e->getMessage());
             return response()->json(['message' => 'Failed to create invoice.'], 500);
+        }
+    }
+
+    public function view($invoice_number)
+    {
+        try {
+            $invoice = Invoice::with(['customer', 'items'])->where('invoice_number', $invoice_number)->first();
+
+            if (!$invoice) {
+                return response()->json(["message" => "Invoice $invoice_number not found!"], 404);
+            }
+
+            return response()->json($invoice, 200);
+        } catch (Exception $ex) {
+            Log::error($ex->getMessage());
+            return response()->json(['message' => 'An unexpected error occurred'], 500);
         }
     }
 }

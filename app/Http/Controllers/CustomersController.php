@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class CustomersController extends Controller
 {
@@ -11,7 +12,9 @@ class CustomersController extends Controller
     {
         try {
             // Fetch customers from the database
-            $customers = Customer::all();
+            $customers = Customer::orderBy('created_at', 'desc')->paginate(20);
+
+            Log::info('Fetched customers', ['count' => $customers->count()]);
 
             if ($customers->isEmpty()) {
                 return response()->json(['message' => 'No customers found'], 404);
