@@ -14,8 +14,6 @@ class CustomersController extends Controller
             // Fetch customers from the database
             $customers = Customer::orderBy('created_at', 'desc')->paginate(20);
 
-            Log::info('Fetched customers', ['count' => $customers->count()]);
-
             if ($customers->isEmpty()) {
                 return response()->json(['message' => 'No customers found'], 404);
             }
