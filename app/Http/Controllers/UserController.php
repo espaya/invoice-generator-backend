@@ -87,7 +87,6 @@ class UserController extends Controller
 
         try 
         {
-
             $user = Auth::user();
             $userNameExists = User::where('name', $request->username)
                 ->where('id', '!==', $user->id)

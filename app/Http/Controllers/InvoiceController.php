@@ -126,7 +126,8 @@ class InvoiceController extends Controller
                 $customer = Customer::create([
                     'name' => $newCustomer['name'],
                     'email' => $newCustomer['email'],
-                    'address' => $newCustomer['address'] ?? null,
+                    'address' => $newCustomer['address'] ?? "",
+                    'phone' => $newCustomer['phone'] ?? "",
                     'user_id' => Auth::id(),
                 ]);
                 $customerId = $customer->id;
@@ -282,7 +283,7 @@ class InvoiceController extends Controller
                     'name' => $newCustomer['name'],
                     'email' => $newCustomer['email'],
                     'address' => $newCustomer['address'],
-                    'phone' => $newCustomer['phone'] ?? null,
+                    'phone' => $newCustomer['phone'] ?? "",
                 ]);
 
                 $customerId = $customer->id;
