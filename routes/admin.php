@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminCustomersController;
 use App\Http\Controllers\Admin\AdminInvoiceController;
 use App\Http\Controllers\Admin\AdminUsers;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\CompanyController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,4 +20,7 @@ Route::middleware(['auth:sanctum', 'web'])->group(function () {
 
     Route::get('/company-settings', [CompanyController::class, 'index']);
     Route::post('/company-settings', [CompanyController::class, 'store']);
+
+    Route::get('/admin/invoices/stats', [DashboardController::class, 'stats']);
+    Route::get('/admin/invoices/recent', [DashboardController::class, 'recentInvoices']);
 });
