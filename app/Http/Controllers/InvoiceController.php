@@ -17,23 +17,45 @@ use Illuminate\Support\Facades\Mail;
 
 class InvoiceController extends Controller
 {
-    // Only fetch invoices of the logged-in user
-    public function index()
+    public function index(Request $request)
     {
         try {
+            $user = Auth::user();
 
-            $invoices = Invoice::with('customer', 'items')
-                ->orderBy('created_at', 'desc')
+            $search = trim($request->query("search", ""));
+
+            $query = Invoice::with("customer", "items")
+                ->where("user_id", $user->id);
+
+            // ✅ Only search when search is filled
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where("invoice_number", "LIKE", "%{$search}%")
+                        ->orWhere("status", "LIKE", "%{$search}%")
+                        ->orWhere("invoice_date", "LIKE", "%{$search}%")
+                        ->orWhereHas("customer", function ($c) use ($search) {
+                            $c->where("name", "LIKE", "%{$search}%")
+                                ->orWhere("email", "LIKE", "%{$search}%");
+                        });
+                });
+            }
+
+            $invoices = $query->orderBy("created_at", "desc")
                 ->paginate(20);
 
-            if ($invoices->isEmpty()) {
+            // ✅ Correct way to check paginator emptiness
+            if ($invoices->count() === 0) {
                 return response()->json(['message' => 'No invoices found.'], 404);
             }
 
-            return response()->json($invoices);
-        } catch (Exception $e) {
-            Log::error('Error fetching invoices: ' . $e->getMessage());
-            return response()->json(['message' => 'Failed to fetch invoices.'], 500);
+            return response()->json($invoices, 200);
+        } catch (\Exception $e) {
+            Log::error("Error fetching invoices: " . $e->getMessage());
+
+            return response()->json([
+                "message" => "Failed to fetch invoices.",
+                "error" => $e->getMessage()
+            ], 500);
         }
     }
 
