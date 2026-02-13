@@ -36,4 +36,10 @@ class Invoice extends Model
     {
         return $this->hasMany(InvoiceItem::class);
     }
+
+    protected $casts = [
+        'subtotal' => 'decimal:2',
+        'tax_percent' => 'decimal:2',
+        'total' => 'decimal:2',
+    ];
 }

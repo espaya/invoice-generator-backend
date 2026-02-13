@@ -252,7 +252,7 @@ class InvoiceController extends Controller
             // ---------------- CUSTOMER ----------------
             $customerId = $request->customer_id;
 
-            if (!$customerId && $request->new_customer) {
+            if (!$customerId && is_array($request->new_customer)) {
                 $newCustomer = $request->new_customer;
 
                 $customer = Customer::create([
@@ -264,8 +264,7 @@ class InvoiceController extends Controller
                 ]);
 
                 $customerId = $customer->id;
-
-                $hasChanges = true; // new customer created
+                $hasChanges = true;
             }
 
             // ---------------- TOTAL CALC ----------------
@@ -274,23 +273,29 @@ class InvoiceController extends Controller
             });
 
             $taxPercent = $request->tax_percent ?? 0;
-            $taxAmount  = ($subtotal * $taxPercent);
-            $total      = $subtotal + $taxAmount;
+
+            // normalize decimals
+            $subtotal = round($subtotal, 2);
+            $taxPercent = round($taxPercent, 2);
+
+            $taxAmount  = round(($subtotal * $taxPercent), 2);
+            $total      = round(($subtotal + $taxAmount), 2);
 
             // ---------------- UPDATE INVOICE ----------------
-            $invoice->customer_id   = $customerId;
-            $invoice->invoice_date  = $request->invoice_date;
-            $invoice->due_date      = $request->due_date;
-            $invoice->status        = $request->status;
-            $invoice->notes         = $request->notes;
+            $invoice->customer_id  = $customerId;
+            $invoice->invoice_date = $request->invoice_date;
+            $invoice->due_date     = $request->due_date;
+            $invoice->status       = $request->status;
+            $invoice->notes        = $request->notes;
 
-            $invoice->subtotal      = $subtotal;
-            $invoice->tax_percent   = $taxPercent;
-            $invoice->total         = $total;
+            $invoice->subtotal     = $subtotal;
+            $invoice->tax_percent  = $taxPercent;
+            $invoice->total        = $total;
 
-            // save only if changed
+            // detect invoice changes correctly
             if ($invoice->isDirty()) {
                 $invoice->save();
+                $hasChanges = true;
             }
 
             // ---------------- ITEMS UPDATE ----------------
@@ -312,14 +317,17 @@ class InvoiceController extends Controller
             // Update or Create items
             foreach ($request->items as $itemData) {
 
+                $lineTotal = round($itemData['quantity'] * $itemData['unit_price'], 2);
+
                 if (!empty($itemData['id'])) {
+
                     $item = $invoice->items()->where('id', $itemData['id'])->first();
 
                     if ($item) {
                         $item->description = $itemData['description'];
-                        $item->quantity = $itemData['quantity'];
-                        $item->unit_price = $itemData['unit_price'];
-                        $item->total = $itemData['quantity'] * $itemData['unit_price'];
+                        $item->quantity    = $itemData['quantity'];
+                        $item->unit_price  = round($itemData['unit_price'], 2);
+                        $item->total       = $lineTotal;
 
                         if ($item->isDirty()) {
                             $item->save();
@@ -327,27 +335,28 @@ class InvoiceController extends Controller
                         }
                     }
                 } else {
-                    // Create new item
                     $invoice->items()->create([
                         'description' => $itemData['description'],
-                        'quantity' => $itemData['quantity'],
-                        'unit_price' => $itemData['unit_price'],
-                        'total' => $itemData['quantity'] * $itemData['unit_price'],
+                        'quantity'    => $itemData['quantity'],
+                        'unit_price'  => round($itemData['unit_price'], 2),
+                        'total'       => $lineTotal,
                     ]);
 
                     $hasChanges = true;
                 }
             }
 
-            DB::commit();
-
-            // ✅ No changes made
+            // ✅ If nothing changed at all
             if (!$hasChanges) {
+                DB::rollBack();
+
                 return response()->json([
                     "message" => "No changes were made",
                     "invoice" => $invoice->fresh(['customer', 'items'])
                 ], 200);
             }
+
+            DB::commit();
 
             return response()->json([
                 "message" => "Invoice updated successfully",
@@ -564,6 +573,97 @@ class InvoiceController extends Controller
         } catch (Exception $ex) {
             Log::error($ex->getMessage());
             return response()->json(['message' => 'An unexpected error occurred'], 500);
+        }
+    }
+
+    public function recentInvoices()
+    {
+        try {
+            $user = Auth::user();
+
+            $invoices = Invoice::with('customer')->where("user_id", $user->id)
+                ->latest()
+                ->take(3)
+                ->get();
+
+            return response()->json(["invoices" => $invoices], 200);
+        } catch (Exception $ex) {
+            Log::error($ex->getMessage());
+            return response()->json(['message' => 'An unexpected error occurred'], 500);
+        }
+    }
+
+    public function stats()
+    {
+        try {
+            $user = Auth::user();
+
+            // Total unique clients
+            $totalClients = Customer::where("user_id", $user->id)->count();
+
+            // Clients created this month
+            $clientsThisMonth = Customer::where("user_id", $user->id)
+                ->whereYear("created_at", now()->year)
+                ->whereMonth("created_at", now()->month)
+                ->count();
+
+            // Top client (most invoices)
+            $topClient = Customer::where("user_id", $user->id)
+                ->withCount("invoices")
+                ->orderByDesc("invoices_count")
+                ->first();
+
+
+            $totalInvoices = Invoice::where("user_id", $user->id)->count();
+
+            $paidInvoices = Invoice::where("user_id", $user->id)
+                ->where("status", "paid")
+                ->count();
+
+            $pendingInvoices = Invoice::where("user_id", $user->id)
+                ->where("status", "pending")
+                ->count();
+
+            $overdueInvoices = Invoice::where("user_id", $user->id)
+                ->where("status", "overdue")
+                ->count();
+
+            $totalRevenue = Invoice::where("user_id", $user->id)->sum("total");
+
+            $paidRevenue = Invoice::where("user_id", $user->id)
+                ->where("status", "paid")
+                ->sum("total");
+
+            $pendingRevenue = Invoice::where("user_id", $user->id)
+                ->where("status", "pending")
+                ->sum("total");
+
+            $overdueRevenue = Invoice::where("user_id", $user->id)
+                ->where("status", "overdue")
+                ->sum("total");
+
+            return response()->json([
+                "total_revenue" => $totalRevenue,
+                "paid_revenue" => $paidRevenue,
+                "pending_revenue" => $pendingRevenue,
+                "overdue_revenue" => $overdueRevenue,
+                "total_invoices" => $totalInvoices,
+                "overdue_invoices" => $overdueInvoices,
+                "paid_invoices" => $paidInvoices,
+                "pending_invoices" => $pendingInvoices,
+                "total_clients" => $totalClients,
+                "clients_this_month" => $clientsThisMonth,
+                "top_client" => $topClient ? [
+                    "id" => $topClient->id,
+                    "name" => $topClient->name,
+                    "invoices_count" => $topClient->invoices_count
+                ] : null
+            ], 200);
+        } catch (\Exception $ex) {
+            Log::error($ex->getMessage());
+            return response()->json([
+                "message" => "Failed to fetch clients stats",
+            ], 500);
         }
     }
 }
