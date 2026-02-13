@@ -6,9 +6,9 @@ use App\Http\Controllers\InvoiceController;
 use Illuminate\Support\Facades\Route;
 
 
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->name('login');
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum', 'web')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/company-settings', [CompanyController::class, 'index']);
