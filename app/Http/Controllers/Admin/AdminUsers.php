@@ -20,7 +20,7 @@ class AdminUsers extends Controller
         try {
             $search = $request->query('search');
 
-            $users = User::where('role', 'user')
+            $users = User::with('profile')->where('role', 'user')
                 ->when($search, function ($query) use ($search) {
                     $query->where('name', 'LIKE', "%$search%")
                         ->orWhere('email', 'LIKE', "%$search%");
