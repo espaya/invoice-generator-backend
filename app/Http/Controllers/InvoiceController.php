@@ -108,6 +108,14 @@ class InvoiceController extends Controller
 
         DB::beginTransaction();
 
+        $user = Auth::user();
+
+        if (!$user->can_create_invoice) {
+            return response()->json([
+                'message' => "Sorry you're not allowed to create an invoice"
+            ], 500);
+        }
+
         try {
 
             $subtotal = collect($request->items)->sum(function ($item) {
@@ -258,6 +266,14 @@ class InvoiceController extends Controller
 
         DB::beginTransaction();
 
+        $user = Auth::user();
+
+        if (!$user->can_create_invoice) {
+            return response()->json([
+                'message' => "Sorry you're not allowed to update an invoice"
+            ], 500);
+        }
+
         try {
             $invoice = Invoice::with('items')
                 ->where('invoice_number', $invoice_number)
@@ -395,7 +411,6 @@ class InvoiceController extends Controller
         }
     }
 
-
     public function view($invoice_number)
     {
         try {
@@ -415,6 +430,14 @@ class InvoiceController extends Controller
     public function downloadPdf($invoice_number)
     {
         try {
+
+            $user = Auth::user();
+
+            if (!$user->can_download_pdf) {
+                return response()->json([
+                    'message' => "Sorry you're not allowed to download invoice"
+                ], 500);
+            }
 
             $invoice = Invoice::with(['customer', 'items'])
                 ->where('invoice_number', $invoice_number)
@@ -444,7 +467,7 @@ class InvoiceController extends Controller
 
             return $pdf->download("invoice-" . $invoice->invoice_number . ".pdf");
         } catch (Exception $ex) {
-            Log::error($ex->getMessage());
+            Log::error('Download Error: ' . $ex->getMessage());
             return response()->json(['message' => 'An unexpected error occurred'], 500);
         }
     }
@@ -452,6 +475,15 @@ class InvoiceController extends Controller
     public function sendInvoiceEmail($invoice_number)
     {
         try {
+
+            $user = Auth::user();
+
+            if (!$user->can_send_email) {
+                return response()->json([
+                    'message' => "Sorry you're not allowed to send invoice to email"
+                ], 500);
+            }
+
             $invoice = Invoice::with(['customer', 'items'])
                 ->where("invoice_number", $invoice_number)
                 ->first();

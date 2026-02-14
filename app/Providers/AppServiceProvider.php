@@ -21,13 +21,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        View::composer('*', function ($view) {
-            if (auth()->check()) {
-                $view->with(
-                    'companySetting',
-                    auth()->user()->companySetting
-                );
-            }
-        });
+        // View::composer('*', function ($view) {
+        //     if (auth()->check()) {
+        //         $view->with(
+        //             'companySetting',
+        //             auth()->user()->companySetting
+        //         );
+        //     }
+        // });
     }
 }

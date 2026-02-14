@@ -30,4 +30,11 @@ Route::middleware(['auth:sanctum', 'web'])->group(function () {
     Route::get('/admin/invoices/recent', [DashboardController::class, 'recentInvoices']);
 
     Route::get('/admin/dashboard-summary', [DashboardController::class, 'index']);
+
+    Route::put('/admin/users/{id}/status', [AdminUserSettingsController::class, 'updateStatus']);
+    Route::put('/admin/users/{id}/permissions', [AdminUserSettingsController::class, 'updatePermissions']);
+    Route::put('/admin/users/{id}/security', [AdminUserSettingsController::class, 'updateSecurity']);
+    Route::put('/admin/users/{id}/notes', [AdminUserSettingsController::class, 'updateNotes']);
+    Route::delete('/users/{id}', [AdminUsersController::class, 'destroy']); //
+
 });

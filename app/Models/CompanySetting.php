@@ -22,8 +22,8 @@ class CompanySetting extends Model
         'custom_css'
     ];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    // public function user()
+    // {
+    //     return $this->belongsTo(User::class);
+    // }
 }

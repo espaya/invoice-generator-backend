@@ -24,16 +24,53 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $request->session()->regenerate();
-
         $user = Auth::user();
+
+        // ================================
+        // BLOCK LOGIN FOR RESTRICTED USERS
+        // ================================
+        if ($user->status === "banned") {
+            Auth::logout();
+
+            return response()->json([
+                "message" => "Your account has been banned. Contact support."
+            ], 403);
+        }
+
+        if ($user->force_password_reset) {
+            Auth::logout();
+
+            return response()->json([
+                "message" => "Password reset required. Please reset your password to continue.",
+                "force_password_reset" => true,
+            ], 403);
+        }
+
+
+        if ($user->status === "suspended") {
+            Auth::logout();
+
+            return response()->json([
+                "message" => "Your account is suspended. Contact support."
+            ], 403);
+        }
+
+        if ($user->is_blocked) {
+            Auth::logout();
+
+            return response()->json([
+                "message" => "Your account has been blocked. Contact support."
+            ], 403);
+        }
+
+        // regenerate session only after passing restrictions
+        $request->session()->regenerate();
 
         $redirect_url = match ($user->role) {
             'admin' => '/admin/dashboard',
             'user' => '/user/dashboard',
             default => '/',
         };
-
 
         return response()->json([
             "message" => "Login successful",
@@ -43,15 +80,15 @@ class AuthController extends Controller
                 "email" => $user->email,
                 "role" => $user->role,
             ],
-
             "redirect_url" => $redirect_url
         ], 200);
     }
 
+
     public function logout(Request $request)
     {
         Auth::guard('web')->logout();
-        
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

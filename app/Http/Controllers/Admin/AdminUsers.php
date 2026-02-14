@@ -60,7 +60,7 @@ class AdminUsers extends Controller
     public function view($id)
     {
         try {
-            $user = User::with('profile')->where('id', $id)->first();
+            $user = User::with('profile', 'customers', 'invoices')->where('id', $id)->first();
 
             if (!$user) {
                 return response()->json(['message' => 'This user was not found']);

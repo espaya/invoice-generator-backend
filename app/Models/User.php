@@ -20,6 +20,17 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+
+        'status',
+        'is_blocked',
+        'force_password_reset',
+
+        'can_create_invoice',
+        'can_download_pdf',
+        'can_send_email',
+
+        'admin_notes',
+        'force_password_reset'
     ];
 
     /**
