@@ -57,6 +57,21 @@ class AdminUsers extends Controller
         }
     }
 
+    public function view($id)
+    {
+        try {
+            $user = User::with('profile')->where('id', $id)->first();
+
+            if (!$user) {
+                return response()->json(['message' => 'This user was not found']);
+            }
+
+            return response()->json($user, 200);
+        } catch (Exception $ex) {
+            Log::error($ex->getMessage());
+            return response()->json(['message' => 'An unexpected error occurred'], 500);
+        }
+    }
 
     public function store(Request $request)
     {
@@ -169,6 +184,119 @@ class AdminUsers extends Controller
                 Storage::disk('public')->delete($photoPath);
             }
 
+            Log::error($ex->getMessage());
+
+            return response()->json([
+                'message' => $ex->getMessage()
+            ], 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        $user = User::with('profile')->findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string|max:255|unique:users,name,' . $user->id,
+            'email' => 'required|email|unique:users,email,' . $user->id,
+
+            'password' => [
+                'nullable',
+                'string',
+                Password::min(8)->mixedCase()->numbers()->symbols()
+            ],
+
+            'role' => 'required|string',
+            'full_name' => 'required|string|max:255',
+
+            'phone' => [
+                'nullable',
+                'string',
+                'max:50',
+                'regex:/^\+?[0-9\s\-\(\)]{7,20}$/'
+            ],
+
+            'address' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:100',
+            'post_code' => 'nullable|string|max:50',
+            'country' => 'nullable|string|max:100',
+
+            'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // ========================
+            // UPDATE USER (ONLY DIRTY)
+            // ========================
+            $user->fill([
+                'name' => $request->name,
+                'email' => $request->email,
+                'role' => $request->role,
+            ]);
+
+            if ($request->filled('password')) {
+                $user->password = Hash::make($request->password);
+            }
+
+            $userChanges = $user->getDirty();
+
+            if ($user->isDirty()) {
+                $user->save();
+            }
+
+            // ========================
+            // UPDATE PROFILE (ONLY DIRTY)
+            // ========================
+            $profile = $user->profile ?? new Profile(['user_id' => $user->id]);
+
+            $profile->fill([
+                'full_name' => $request->full_name,
+                'phone' => $request->phone,
+                'address' => $request->address,
+                'city' => $request->city,
+                'post_code' => $request->post_code,
+                'country' => $request->country,
+            ]);
+
+            // ========================
+            // PHOTO UPDATE
+            // ========================
+            if ($request->hasFile('photo')) {
+                $dir = "public_profiles";
+
+                if (!Storage::disk('public')->exists($dir)) {
+                    Storage::disk('public')->makeDirectory($dir);
+                }
+
+                // delete old photo
+                if ($profile->photo && Storage::disk('public')->exists($profile->photo)) {
+                    Storage::disk('public')->delete($profile->photo);
+                }
+
+                $profile->photo = $request->file('photo')->store($dir, 'public');
+            }
+
+            $profileChanges = $profile->getDirty();
+
+            if ($profile->isDirty()) {
+                $profile->save();
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'User updated successfully',
+                'changes' => [
+                    'user' => $userChanges,
+                    'profile' => $profileChanges
+                ],
+                'user' => $user->fresh()->load('profile')
+            ], 200);
+        } catch (\Exception $ex) {
+
+            DB::rollBack();
             Log::error($ex->getMessage());
 
             return response()->json([

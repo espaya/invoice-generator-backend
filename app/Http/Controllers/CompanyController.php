@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\Storage;
 
 class CompanyController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $companySetting = CompanySetting::first(); 
-        
+        $companySetting = CompanySetting::first();
+
         if (!$companySetting) {
             return response()->json(['message' => 'Company settings not found'], 404);
         }
@@ -32,7 +32,8 @@ class CompanyController extends Controller
             'invoice_footer' => $companySetting->invoice_footer,
             'tin' => $companySetting->tin,
             'currency' => $companySetting->currency,
-            'currency_symbol' => $companySetting->currency_symbol
+            'currency_symbol' => $companySetting->currency_symbol,
+            'custom_css' => $companySetting->custom_css
         ], 200);
     }
 
@@ -152,16 +153,49 @@ class CompanyController extends Controller
 
         ]);
 
-        $companySetting = $request->user()->companySetting;
-
-        if (!$companySetting) {
-            // Create new settings if they don't exist
-            $companySetting = $request->user()->companySetting()->create($request->all());
-        } else {
-            // Update existing settings
-            $companySetting->update($request->all());
-        }
+        $companySetting = CompanySetting::first();
 
         return response()->json($companySetting);
+    }
+
+    // public function show()
+    // {
+    //     $settings = CompanySetting::first();
+
+    //     return response()->json($settings);
+    // }
+
+    public function updateWhiteLabel(Request $request)
+    {
+        $request->validate([
+            'custom_css' => 'nullable|string'
+        ], [
+            'custom_css.string' => 'Invalid CSS input'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $settings = CompanySetting::first();
+
+            if (!$settings) {
+                $settings = CompanySetting::create([]);
+            }
+
+            $settings->update([
+                'custom_css' => $request->custom_css ?? ""
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Custom CSS updated successfully',
+                'settings' => $settings
+            ]);
+        } catch (Exception $ex) {
+            DB::rollBack();
+            Log::error($ex->getMessage());
+            return response()->json(['message' => 'An unexpected error occurred'], 500);
+        }
     }
 }

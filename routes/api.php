@@ -8,10 +8,13 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 
+Route::middleware('web')->group(function () {
+    Route::get('/company-settings', [CompanyController::class, 'index']);
+});
+
 Route::middleware('auth:sanctum', 'web')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/company-settings', [CompanyController::class, 'index']);
     Route::get('/get-invoices', [InvoiceController::class, 'index']);
 });
 

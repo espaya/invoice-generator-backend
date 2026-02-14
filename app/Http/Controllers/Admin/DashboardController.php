@@ -12,6 +12,64 @@ use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
+    public function index()
+    {
+        // =========================
+        // TOP CUSTOMERS
+        // =========================
+        $topCustomers = Customer::withCount('invoices')
+            ->withSum('invoices as total_spent', 'total')
+            ->orderByDesc('total_spent')
+            ->take(5)
+            ->get()
+            ->map(function ($customer) {
+                return [
+                    'name' => $customer->name,
+                    'invoices' => $customer->invoices_count,
+                    'total' => number_format($customer->total_spent ?? 0, 2),
+                ];
+            });
+
+        // =========================
+        // DUE SOON INVOICES
+        // =========================
+        $dueSoonInvoices = Invoice::where('status', 'pending')
+            ->whereDate('due_date', '>=', now())
+            ->whereDate('due_date', '<=', now()->addDays(7))
+            ->orderBy('due_date', 'asc')
+            ->take(5)
+            ->get()
+            ->map(function ($invoice) {
+                return [
+                    'invoice_number' => $invoice->invoice_number,
+                    'due_date' => $invoice->due_date,
+                    'total' => number_format($invoice->total, 2),
+                ];
+            });
+
+        // =========================
+        // OVERDUE INVOICES
+        // =========================
+        $overdueInvoices = Invoice::where('status', 'pending')
+            ->whereDate('due_date', '<', now())
+            ->orderBy('due_date', 'asc')
+            ->take(5)
+            ->get()
+            ->map(function ($invoice) {
+                return [
+                    'invoice_number' => $invoice->invoice_number,
+                    'due_date' => $invoice->due_date,
+                    'total' => number_format($invoice->total, 2),
+                ];
+            });
+
+        return response()->json([
+            'top_customers' => $topCustomers,
+            'due_soon_invoices' => $dueSoonInvoices,
+            'overdue_invoices' => $overdueInvoices,
+        ]);
+    }
+
     public function stats()
     {
         try {
