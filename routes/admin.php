@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminCustomersController;
 use App\Http\Controllers\Admin\AdminInvoiceController;
 use App\Http\Controllers\Admin\AdminUsers;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\AdminUserSettingsController;
 use App\Http\Controllers\CompanyController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,6 +36,5 @@ Route::middleware(['auth:sanctum', 'web'])->group(function () {
     Route::put('/admin/users/{id}/permissions', [AdminUserSettingsController::class, 'updatePermissions']);
     Route::put('/admin/users/{id}/security', [AdminUserSettingsController::class, 'updateSecurity']);
     Route::put('/admin/users/{id}/notes', [AdminUserSettingsController::class, 'updateNotes']);
-    Route::delete('/users/{id}', [AdminUsersController::class, 'destroy']); //
-
+    Route::delete('/users/{id}', [AdminUsers::class, 'destroy']); //
 });

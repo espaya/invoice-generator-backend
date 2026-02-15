@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Support\Facades\URL;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -21,13 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // View::composer('*', function ($view) {
-        //     if (auth()->check()) {
-        //         $view->with(
-        //             'companySetting',
-        //             auth()->user()->companySetting
-        //         );
-        //     }
-        // });
+        ResetPassword::createUrlUsing(function ($user, string $token) {
+            return config("app.frontend_url") . "/reset-password/confirm?token=" . $token . "&email=" . urlencode($user->email);
+        });
     }
 }
