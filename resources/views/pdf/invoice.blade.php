@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <title>Invoice {{ $invoice->invoice_number }}</title>
@@ -150,15 +151,27 @@
             </td>
 
             <td class="company-details">
-                {{-- Logo (optional) --}}
-                @if(!empty($company['logo']))
-                    <img src="{{ $company['logo'] }}" width="120" style="margin-bottom:10px;">
-                @endif
+                <div style="text-align:right;">
 
-                <strong>{{ $company['company_name'] ?? 'Company Name' }}</strong><br>
-                {{ $company['company_address'] ?? '' }}<br>
-                {{ $company['company_email'] ?? '' }}<br>
-                {{ $company['company_phone'] ?? '' }}
+                    @if(!empty($company['logo']) && file_exists($company['logo']))
+                        @php
+                            $type = pathinfo($company['logo'], PATHINFO_EXTENSION);
+                            $data = file_get_contents($company['logo']);
+                            $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                        @endphp
+                    <img
+                        src="{{ $base64 }}"
+                        width="120"
+                        style="margin-bottom:6px; display:inline-block;">
+                    <br>
+                    @endif
+
+                    <strong>{{ $company['company_name'] ?? 'Company Name' }}</strong><br>
+                    {{ $company['company_address'] ?? '' }}<br>
+                    {{ $company['company_email'] ?? '' }}<br>
+                    {{ $company['company_phone'] ?? '' }}
+
+                </div>
             </td>
         </tr>
     </table>
@@ -183,22 +196,22 @@
 
         <tbody>
             @foreach($invoice->items as $item)
-                <tr>
-                    <td>{{ $item->description }}</td>
-                    <td class="right">{{ $item->quantity }}</td>
-                    <td class="right">{{ $currency }}{{ number_format($item->unit_price, 2) }}</td>
-                    <td class="right">{{ $currency }}{{ number_format($item->total, 2) }}</td>
-                </tr>
+            <tr>
+                <td>{{ $item->description }}</td>
+                <td class="right">{{ $item->quantity }}</td>
+                <td class="right">{{ $currency }}{{ number_format($item->unit_price, 2) }}</td>
+                <td class="right">{{ $currency }}{{ number_format($item->total, 2) }}</td>
+            </tr>
             @endforeach
         </tbody>
     </table>
 
     <!-- NOTES -->
     @if($invoice->notes)
-        <div class="notes">
-            <strong>Notes:</strong>
-            {{ $invoice->notes }}
-        </div>
+    <div class="notes">
+        <strong>Notes:</strong>
+        {{ $invoice->notes }}
+    </div>
     @endif
 
     <!-- TOTALS -->
@@ -231,4 +244,5 @@
     </div>
 
 </body>
+
 </html>

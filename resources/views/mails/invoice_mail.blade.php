@@ -189,15 +189,11 @@
                 <h2>Hello {{ $invoice->customer->name }},</h2>
 
                 <p>
-                    Please find your invoice below. A PDF copy is also attached to this email.
+                    Please find a copy of your invoice attached below to this email.
                 </p>
 
                 <!-- Download Button -->
-                <div style="margin:20px 0;">
-                    <a href="{{ $downloadUrl }}" class="download-btn">
-                        Download Invoice PDF
-                    </a>
-                </div>
+
             </div>
 
             <hr class="divider">
@@ -217,11 +213,24 @@
                     </td>
 
                     <td class="company-details">
-                        <strong>{{ $company['company_name'] ?? "Company Name" }}</strong><br>
-                        {{ $company['company_address'] ?? "" }}<br>
-                        {{ $company['company_email'] ?? "" }}<br>
-                        {{ $company['company_phone'] ?? "" }}
+                        <div style="text-align:right;">
+
+                            @if(!empty($company['logo']))
+                            <img
+                                src="{{ $company['logo'] }}"
+                                width="120"
+                                style="margin-bottom:6px; display:inline-block;">
+                            <br>
+                            @endif
+
+                            <strong>{{ $company['company_name'] ?? 'Company Name' }}</strong><br>
+                            {{ $company['company_address'] ?? '' }}<br>
+                            {{ $company['company_email'] ?? '' }}<br>
+                            {{ $company['company_phone'] ?? '' }}
+
+                        </div>
                     </td>
+
                 </tr>
             </table>
 

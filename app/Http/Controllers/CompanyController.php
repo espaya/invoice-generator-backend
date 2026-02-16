@@ -14,27 +14,33 @@ class CompanyController extends Controller
 {
     public function index()
     {
-        $companySetting = CompanySetting::first();
+        // return response()->json('ok', 200);
+        try {
+            $companySetting = CompanySetting::first();
 
-        if (!$companySetting) {
-            return response()->json(['message' => 'Company settings not found'], 404);
+            if (!$companySetting) {
+                return response()->json(['message' => 'Company settings not found'], 404);
+            }
+
+            return response()->json([
+                'company_name' => $companySetting->company_name,
+                'company_email' => $companySetting->company_email,
+                'company_phone' => $companySetting->company_phone,
+                'company_address' => $companySetting->company_address,
+                'logo' => $companySetting->logo,
+                'primary_color' => $companySetting->primary_color,
+                'secondary_color' => $companySetting->secondary_color,
+                'invoice_prefix' => $companySetting->invoice_prefix,
+                'invoice_footer' => $companySetting->invoice_footer,
+                'tin' => $companySetting->tin,
+                'currency' => $companySetting->currency,
+                'currency_symbol' => $companySetting->currency_symbol,
+                'custom_css' => $companySetting->custom_css
+            ], 200);
+        } catch (Exception $ex) {
+            Log::error($ex->getMessage());
+            return response()->json(['message' => 'An unexpected error occurred'], 500);
         }
-
-        return response()->json([
-            'company_name' => $companySetting->company_name,
-            'company_email' => $companySetting->company_email,
-            'company_phone' => $companySetting->company_phone,
-            'company_address' => $companySetting->company_address,
-            'logo' => $companySetting->logo,
-            'primary_color' => $companySetting->primary_color,
-            'secondary_color' => $companySetting->secondary_color,
-            'invoice_prefix' => $companySetting->invoice_prefix,
-            'invoice_footer' => $companySetting->invoice_footer,
-            'tin' => $companySetting->tin,
-            'currency' => $companySetting->currency,
-            'currency_symbol' => $companySetting->currency_symbol,
-            'custom_css' => $companySetting->custom_css
-        ], 200);
     }
 
 
@@ -158,12 +164,6 @@ class CompanyController extends Controller
         return response()->json($companySetting);
     }
 
-    // public function show()
-    // {
-    //     $settings = CompanySetting::first();
-
-    //     return response()->json($settings);
-    // }
 
     public function updateWhiteLabel(Request $request)
     {

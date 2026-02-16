@@ -21,9 +21,4 @@ class CompanySetting extends Model
         'currency_symbol',
         'custom_css'
     ];
-
-    // public function user()
-    // {
-    //     return $this->belongsTo(User::class);
-    // }
 }

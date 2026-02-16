@@ -9,18 +9,27 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 
+Route::get('/ping', function () {
+    return response()->json([
+        "status" => "ok",
+        "message" => "Laravel is running"
+    ]);
+});
 
-Route::middleware('web')->group(function () {
+
+
+// Route::middleware('web')->group(function () {
     Route::get('/company-settings', [CompanyController::class, 'index']);
     Route::post('/password/reset/request', [PasswordResetController::class, 'sendResetLink']);
     Route::post('/password/reset/confirm', [PasswordResetController::class, 'resetPassword']);
-});
+    Route::get('/invoice/public/{invoice_number}', [InvoiceController::class, 'publicDownload']);
+// });
 
-Route::middleware('auth:sanctum', 'web')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/get-invoices', [InvoiceController::class, 'index']);
 
+    Route::get('/get-invoices', [InvoiceController::class, 'index']);
     Route::get('/view-invoice/{invoice_number}', [InvoiceController::class, 'view']);
     Route::get('/invoice/{invoice_number}/download', [InvoiceController::class, 'downloadPdf']);
     Route::post('/invoice/{invoice_number}/send', [InvoiceController::class, 'sendInvoiceEmail']);

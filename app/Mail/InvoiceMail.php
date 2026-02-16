@@ -32,14 +32,16 @@ class InvoiceMail extends Mailable
             "isRemoteEnabled" => true
         ]);
 
-        $downloadUrl = config("app.frontend_url") . "/user/dashboard/invoice/" . $this->invoice->invoice_number;
+        // $downloadUrl = config("app.url") . "/api/invoice/public/"
+        //     . $this->invoice->invoice_number
+        //     . "?token=" . $this->invoice->public_token;
 
         return $this->subject("Invoice " . $this->invoice->invoice_number)
             ->view("mails.invoice_mail", [
                 "invoice" => $this->invoice,
                 "company" => $this->company,
                 "currency" => $this->currency,
-                "downloadUrl" => $downloadUrl,
+                // "downloadUrl" => $downloadUrl,
             ])
             ->attachData(
                 $pdf->output(),

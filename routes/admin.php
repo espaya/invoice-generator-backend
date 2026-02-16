@@ -8,7 +8,7 @@ use App\Http\Controllers\Admin\AdminUserSettingsController;
 use App\Http\Controllers\CompanyController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth:sanctum', 'web'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/admin/users', [AdminUsers::class, 'index']);
     Route::post('/admin/users', [AdminUsers::class, 'store']);
     Route::put('/admin/users/update/{id}', [AdminUsers::class, 'update']);

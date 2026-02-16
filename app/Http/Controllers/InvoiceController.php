@@ -14,6 +14,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\CompanySetting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+
 
 class InvoiceController extends Controller
 {
@@ -113,7 +115,7 @@ class InvoiceController extends Controller
         if (!$user->can_create_invoice) {
             return response()->json([
                 'message' => "Sorry you're not allowed to create an invoice"
-            ], 500);
+            ], 403);
         }
 
         try {
@@ -161,6 +163,7 @@ class InvoiceController extends Controller
                 'total' => $total,
                 'status' => $request->status,
                 'notes' => $request->notes ?? null,
+                'public_token' => Str::random(60)
             ]);
 
             // 4️⃣ Save invoice items
@@ -173,7 +176,33 @@ class InvoiceController extends Controller
                 ]);
             }
 
-            // Send invoice creation email (optional)
+            // SEND MAIL (better with queue)
+
+            $companySettings = CompanySetting::first();
+
+            $logoBase64 = null;
+            if ($companySettings && $companySettings->logo) {
+                $path = public_path("storage/" . $companySettings->logo);
+
+                if (file_exists($path)) {
+                    $type = pathinfo($path, PATHINFO_EXTENSION);
+                    $data = file_get_contents($path);
+                    $logoBase64 = "data:image/" . $type . ";base64," . base64_encode($data);
+                }
+            }
+
+            $company = [
+                "company_name" => $companySettings->company_name ?? "My Company",
+                "company_address" => $companySettings->company_address ?? "",
+                "company_email" => $companySettings->company_email ?? "",
+                "company_phone" => $companySettings->company_phone ?? "",
+                "logo" => $logoBase64,
+            ];
+
+            $currency = $companySettings?->currency_symbol ?? "GHS";
+
+            Mail::to($invoice->customer->email)
+                ->queue(new InvoiceMail($invoice, $company, $currency));
 
 
             DB::commit();
@@ -271,7 +300,7 @@ class InvoiceController extends Controller
         if (!$user->can_create_invoice) {
             return response()->json([
                 'message' => "Sorry you're not allowed to update an invoice"
-            ], 500);
+            ], 403);
         }
 
         try {
@@ -436,7 +465,7 @@ class InvoiceController extends Controller
             if (!$user->can_download_pdf) {
                 return response()->json([
                     'message' => "Sorry you're not allowed to download invoice"
-                ], 500);
+                ], 403);
             }
 
             $invoice = Invoice::with(['customer', 'items'])
@@ -455,14 +484,20 @@ class InvoiceController extends Controller
                 "company_address" => $companySettings->company_address ?? "",
                 "company_email" => $companySettings->company_email ?? "",
                 "company_phone" => $companySettings->company_phone ?? "",
+                "logo" => $companySettings->logo
+                    ? public_path("storage/" . $companySettings->logo)
+                    : null
             ];
 
-            $currency = $companySettings->currency_symbol ?? "$";
+            $currency = $companySettings->currency_symbol ?? "GHS";
 
             $pdf = Pdf::loadView("pdf.invoice", [
                 "invoice" => $invoice,
                 "company" => $company,
                 "currency" => $currency,
+            ])->setOptions([
+                "isRemoteEnabled" => true,
+                "isHtml5ParserEnabled" => true
             ]);
 
             return $pdf->download("invoice-" . $invoice->invoice_number . ".pdf");
@@ -475,13 +510,15 @@ class InvoiceController extends Controller
     public function sendInvoiceEmail($invoice_number)
     {
         try {
+            ini_set('memory_limit', '512M');
+            set_time_limit(120);
 
             $user = Auth::user();
 
             if (!$user->can_send_email) {
                 return response()->json([
                     'message' => "Sorry you're not allowed to send invoice to email"
-                ], 500);
+                ], 403);
             }
 
             $invoice = Invoice::with(['customer', 'items'])
@@ -498,32 +535,48 @@ class InvoiceController extends Controller
 
             $companySettings = CompanySetting::first();
 
+            $logoBase64 = null;
+            if ($companySettings && $companySettings->logo) {
+                $path = public_path("storage/" . $companySettings->logo);
+
+                if (file_exists($path)) {
+                    $type = pathinfo($path, PATHINFO_EXTENSION);
+                    $data = file_get_contents($path);
+                    $logoBase64 = "data:image/" . $type . ";base64," . base64_encode($data);
+                }
+            }
+
             $company = [
                 "company_name" => $companySettings->company_name ?? "My Company",
                 "company_address" => $companySettings->company_address ?? "",
                 "company_email" => $companySettings->company_email ?? "",
                 "company_phone" => $companySettings->company_phone ?? "",
-                "logo" => null
+                "logo" => $logoBase64,
             ];
 
-            $currency = $companySettings->currency_symbol ?? "$";
 
+            $currency = $companySettings?->currency_symbol ?? "GHS";
+
+            // SEND MAIL (better with queue)
             Mail::to($invoice->customer->email)
-                ->send(new InvoiceMail($invoice, $company, $currency));
+                ->queue(new InvoiceMail($invoice, $company, $currency));
 
             // mark invoice as sent
-            $invoice->status = "sent";
             $invoice->sent_at = Carbon::now();
             $invoice->save();
 
             return response()->json([
-                "message" => "Invoice sent successfully to " . $invoice->customer->email
-            ]);
+                "message" => "Invoice queued successfully to " . $invoice->customer->email
+            ], 200);
         } catch (Exception $ex) {
-            Log::error($ex->getMessage());
-            return response()->json(['message' => 'An unexpected error occurred'], 500);
+            Log::error("Send Invoice Error: " . $ex->getMessage());
+
+            return response()->json([
+                'message' => 'An unexpected error occurred'
+            ], 500);
         }
     }
+
 
     public function markAsPaid($invoice_number)
     {
@@ -718,6 +771,57 @@ class InvoiceController extends Controller
             Log::error($ex->getMessage());
             return response()->json([
                 "message" => "Failed to fetch clients stats",
+            ], 500);
+        }
+    }
+
+    public function publicDownload(Request $request, $invoice_number)
+    {
+        try {
+            $token = $request->query("token");
+
+            $invoice = Invoice::with(['customer', 'items'])
+                ->where("invoice_number", $invoice_number)
+                ->where("public_token", $token)
+                ->first();
+
+            if (!$invoice) {
+                return response()->json([
+                    "message" => "Invalid or expired invoice link"
+                ], 403);
+            }
+
+            $companySettings = CompanySetting::first();
+
+            $company = [
+                "company_name" => $companySettings->company_name ?? "My Company",
+                "company_address" => $companySettings->company_address ?? "",
+                "company_email" => $companySettings->company_email ?? "",
+                "company_phone" => $companySettings->company_phone ?? "",
+                "logo" => $companySettings->logo
+                    ? public_path("storage/" . $companySettings->logo)
+                    : null,
+            ];
+
+            $currency = $companySettings->currency_symbol ?? "GHS";
+
+            $pdf = Pdf::loadView("pdf.invoice", [
+                "invoice" => $invoice,
+                "company" => $company,
+                "currency" => $currency,
+            ])->setOptions([
+                "isRemoteEnabled" => true,
+                "isHtml5ParserEnabled" => true
+            ]);
+
+            return response($pdf->output(), 200)
+                ->header("Content-Type", "application/pdf")
+                ->header("Content-Disposition", "attachment; filename=invoice-{$invoice->invoice_number}.pdf");
+        } catch (\Exception $ex) {
+            Log::error("Public invoice download error: " . $ex->getMessage());
+
+            return response()->json([
+                "message" => "An unexpected error occurred"
             ], 500);
         }
     }
