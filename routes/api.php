@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminCustomersController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyController;
@@ -38,6 +39,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/invoice/{invoice_number}/void', [InvoiceController::class, 'voidInvoice']);
     Route::delete('/invoice/{invoice_number}', [InvoiceController::class, 'deleteInvoice']);
     Route::post('/invoice/{invoice_number}/update', [InvoiceController::class, 'update']);
+
+    Route::get('/get-customer/{id}', [AdminCustomersController::class, 'view']);
+    Route::put('/update-customer/{id}', [AdminCustomersController::class, 'update']);
+
 });
 
 require __DIR__ . '/users.php';

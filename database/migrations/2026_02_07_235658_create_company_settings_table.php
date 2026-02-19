@@ -10,9 +10,6 @@ return new class extends Migration {
         Schema::create('company_settings', function (Blueprint $table) {
             $table->id();
 
-            // Ownership
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-
             // Company identity
             $table->string('company_name');
             $table->string('company_email')->nullable();

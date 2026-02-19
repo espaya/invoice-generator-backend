@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CompanySetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -86,8 +87,23 @@ class AuthController extends Controller
         // regenerate session only after passing restrictions
         $request->session()->regenerate();
 
+
+        $settingsUrl = "/admin/dashboard";
+
+        try {
+            $companySettings = CompanySetting::first();
+
+            if (!$companySettings && !$companySettings->company_name) {
+                $settingsUrl = "/admin/dashboard/settings/system";
+            }
+        } catch (\Exception $e) {
+            // if company_settings table doesn't exist yet
+            $settingsUrl = "/admin/dashboard/settings/system";
+        }
+
+
         $redirect_url = match ($user->role) {
-            'admin' => '/admin/dashboard',
+            'admin' => $settingsUrl,
             'user' => '/user/dashboard',
             default => '/',
         };
