@@ -11,11 +11,11 @@ class InvoiceMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $invoice;
-    public $company;
-    public $currency;
+    public object $invoice;
+    public array $company;
+    public string $currency;
 
-    public function __construct($invoice, $company, $currency)
+    public function __construct(object $invoice, array $company, string $currency)
     {
         $this->invoice = $invoice;
         $this->company = $company;
@@ -31,10 +31,6 @@ class InvoiceMail extends Mailable
         ])->setOptions([
             "isRemoteEnabled" => true
         ]);
-
-        // $downloadUrl = config("app.url") . "/api/invoice/public/"
-        //     . $this->invoice->invoice_number
-        //     . "?token=" . $this->invoice->public_token;
 
         return $this->subject("Invoice " . $this->invoice->invoice_number)
             ->view("mails.invoice_mail", [

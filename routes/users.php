@@ -22,4 +22,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/user/invoices/recent', [InvoiceController::class, 'recentInvoices']);
     Route::get('/user/invoices/stats', [InvoiceController::class, 'stats']);
+    Route::get('/user/existing-customers', [CustomersController::class, 'existingCustomers']);
 });

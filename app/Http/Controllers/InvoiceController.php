@@ -131,20 +131,31 @@ class InvoiceController extends Controller
 
             // 1️⃣ Save customer (if new)
             $customerId = $request->customer_id;
+
             if (!$customerId && $request->new_customer) {
+
                 $newCustomer = $request->new_customer;
-                $customer = Customer::create([
-                    'name' => $newCustomer['name'],
-                    'email' => $newCustomer['email'],
-                    'address' => $newCustomer['address'] ?? "",
-                    'phone' => $newCustomer['phone'] ?? "",
-                    'user_id' => Auth::id(),
-                ]);
+
+                // Check if customer already exists
+                $customer = Customer::where('email', $newCustomer['email'])->first();
+
+                // If not found, create new customer
+                if (!$customer) {
+                    $customer = Customer::create([
+                        'name' => $newCustomer['name'],
+                        'email' => $newCustomer['email'],
+                        'address' => $newCustomer['address'] ?? "",
+                        'phone' => $newCustomer['phone'] ?? "",
+                        'user_id' => Auth::id(),
+                    ]);
+                }
+
                 $customerId = $customer->id;
             }
 
             // prefix 
-            $prefix = Auth::user()->companySetting->invoice_prefix ?? "INV";
+            $companySettings = CompanySetting::first();
+            $prefix = $companySettings->invoice_prefix ?? "INV";
 
             // 2️⃣ Generate unique invoice number
             $lastInvoice = Invoice::latest()->first();
@@ -180,15 +191,10 @@ class InvoiceController extends Controller
 
             $companySettings = CompanySetting::first();
 
-            $logoBase64 = null;
+            $logoUrl = null;
             if ($companySettings && $companySettings->logo) {
-                $path = public_path("storage/" . $companySettings->logo);
-
-                if (file_exists($path)) {
-                    $type = pathinfo($path, PATHINFO_EXTENSION);
-                    $data = file_get_contents($path);
-                    $logoBase64 = "data:image/" . $type . ";base64," . base64_encode($data);
-                }
+                // Generate absolute URL instead of Base64
+                $logoUrl = url("storage/" . $companySettings->logo);
             }
 
             $company = [
@@ -196,7 +202,9 @@ class InvoiceController extends Controller
                 "company_address" => $companySettings->company_address ?? "",
                 "company_email" => $companySettings->company_email ?? "",
                 "company_phone" => $companySettings->company_phone ?? "",
-                "logo" => $logoBase64,
+                "logo" => $logoUrl, // Use URL instead of Base64
+                "invoice_footer" => $companySettings->invoice_footer ?? "",
+                "company_tagline" => $companySettings->company_tagline ?? "",
             ];
 
             $currency = $companySettings?->currency_symbol ?? "GHS";
@@ -486,7 +494,9 @@ class InvoiceController extends Controller
                 "company_phone" => $companySettings->company_phone ?? "",
                 "logo" => $companySettings->logo
                     ? public_path("storage/" . $companySettings->logo)
-                    : null
+                    : null,
+                "company_tagline" => $companySettings->company_tagline ?? "",
+                "invoice_footer" => $companySettings->invoice_footer ?? "",
             ];
 
             $currency = $companySettings->currency_symbol ?? "GHS";
@@ -535,15 +545,10 @@ class InvoiceController extends Controller
 
             $companySettings = CompanySetting::first();
 
-            $logoBase64 = null;
+            $logoUrl = null;
             if ($companySettings && $companySettings->logo) {
-                $path = public_path("storage/" . $companySettings->logo);
-
-                if (file_exists($path)) {
-                    $type = pathinfo($path, PATHINFO_EXTENSION);
-                    $data = file_get_contents($path);
-                    $logoBase64 = "data:image/" . $type . ";base64," . base64_encode($data);
-                }
+                // Generate absolute URL instead of Base64
+                $logoUrl = url("storage/" . $companySettings->logo);
             }
 
             $company = [
@@ -551,7 +556,9 @@ class InvoiceController extends Controller
                 "company_address" => $companySettings->company_address ?? "",
                 "company_email" => $companySettings->company_email ?? "",
                 "company_phone" => $companySettings->company_phone ?? "",
-                "logo" => $logoBase64,
+                "logo" => $logoUrl, // Use URL instead of Base64
+                "invoice_footer" => $companySettings->invoice_footer ?? "",
+                "company_tagline" => $companySettings->company_tagline ?? "",
             ];
 
 
@@ -801,6 +808,8 @@ class InvoiceController extends Controller
                 "logo" => $companySettings->logo
                     ? public_path("storage/" . $companySettings->logo)
                     : null,
+                "company_tagline" => $companySettings->company_tagline ?? "",
+                "invoice_footer" => $companySettings->invoice_footer ?? "",
             ];
 
             $currency = $companySettings->currency_symbol ?? "GHS";

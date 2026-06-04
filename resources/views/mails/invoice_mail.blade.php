@@ -206,8 +206,8 @@
 
                         <div class="invoice-details">
                             <p><strong>Invoice ID:</strong> {{ $invoice->invoice_number }}</p>
-                            <p><strong>Invoice Date:</strong> {{ \Carbon\Carbon::parse($invoice->invoice_date)->format('jS F, Y') }}</p>
-                            <p><strong>Due Date:</strong> {{ \Carbon\Carbon::parse($invoice->due_date)->format('jS F, Y') }}</p>
+                            <p><strong>Invoice Date:</strong> {{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M j, Y') }}</p>
+                            <p><strong>Due Date:</strong> {{ \Carbon\Carbon::parse($invoice->due_date)->format('M j, Y') }}</p>
                             <p><strong>Status:</strong> {{ strtoupper($invoice->status) }}</p>
                         </div>
                     </td>
@@ -219,14 +219,16 @@
                             <img
                                 src="{{ $company['logo'] }}"
                                 width="120"
+                                height="120"
                                 style="margin-bottom:6px; display:inline-block;">
                             <br>
                             @endif
 
-                            <strong>{{ $company['company_name'] ?? 'Company Name' }}</strong><br>
-                            {{ $company['company_address'] ?? '' }}<br>
-                            {{ $company['company_email'] ?? '' }}<br>
-                            {{ $company['company_phone'] ?? '' }}
+                            <strong>{!! $company['company_name'] ?? 'Company Name' !!}</strong><br>
+                            {!! $company['company_tagline'] ?? '' !!}<br>
+                            {!! $company['company_address'] ?? '' !!}<br>
+                            {!! $company['company_email'] ?? '' !!}<br>
+                            {!! $company['company_phone'] ?? '' !!}
 
                         </div>
                     </td>
@@ -298,7 +300,7 @@
 
             <!-- Footer -->
             <div class="footer">
-                Thank you for your business!
+                {{ $company['invoice_footer'] ?? 'Thank you!' }}
             </div>
 
         </div>

@@ -19,6 +19,7 @@ class CompanySetting extends Model
         'tin',
         'currency',
         'currency_symbol',
-        'custom_css'
+        'custom_css',
+        'company_tagline'
     ];
 }

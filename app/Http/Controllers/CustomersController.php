@@ -10,6 +10,23 @@ use Illuminate\Support\Facades\Log;
 
 class CustomersController extends Controller
 {
+    public function existingCustomers()
+    {
+        try {
+
+            $customers = Customer::orderBy("created_at", "desc")
+                ->get();
+
+            return response()->json($customers, 200);
+        } catch (\Exception $e) {
+            Log::error("Failed to fetch existing customers: " . $e->getMessage());
+
+            return response()->json([
+                "message" => "Failed to fetch existing customers",
+                "error" => $e->getMessage()
+            ], 500);
+        }
+    }
 
     public function index(Request $request)
     {
