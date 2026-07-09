@@ -7,170 +7,129 @@
 
     <style>
         body {
-            font-family: DejaVu Sans, sans-serif;
-            font-size: 13px;
-            color: #222;
-            margin: 10px;
-            padding: 0;
-            position: relative;
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
         }
 
-        /* Watermark Styles */
-        .watermark {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            opacity: 0.1;
-            z-index: -1;
-            pointer-events: none;
-            text-align: center;
-        }
-
-        .watermark img {
-            width: 400px;
-            height: auto;
-            opacity: 0.15;
-        }
-
-        /* Alternative: Diagonal watermark */
-        .watermark-diagonal {
-            position: fixed;
-            top: 0;
-            left: 0;
+        .container {
             width: 100%;
-            height: 100%;
-            z-index: -1;
-            pointer-events: none;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
         }
 
-        .watermark-diagonal img {
-            width: 500px;
-            height: auto;
-            opacity: 0.1;
-            transform: rotate(-25deg);
-        }
-
-        /* Optional: Text watermark behind logo */
-        .watermark-text {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(-25deg);
-            font-size: 80px;
-            color: #000;
-            opacity: 0.08;
-            white-space: nowrap;
-            z-index: -1;
-            font-weight: bold;
-            letter-spacing: 5px;
-        }
-
-        /* Optional: Repeating watermark pattern */
-        .watermark-pattern {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            pointer-events: none;
-            background-repeat: repeat;
-            background-size: 150px;
-            opacity: 0.05;
-        }
-
-        .top-header {
+        .invoice-header {
             width: 100%;
             margin-bottom: 20px;
         }
 
-        .top-header td {
+        .invoice-header td {
             vertical-align: top;
         }
 
-        .title {
-            font-size: 28px;
+        .invoice-title {
+            font-size: 24px;
             font-weight: bold;
             margin: 0 0 10px 0;
+            color: #111;
         }
 
         .invoice-details p {
-            margin: 2px 0;
-            line-height: 1.4;
+            margin: 3px 0;
+            font-size: 11px;
         }
 
         .company-details {
             text-align: right;
-            font-size: 13px;
-            line-height: 1.4;
+            font-size: 11px;
         }
 
-        .company-details strong {
-            font-size: 14px;
+        .company-logo {
+            max-width: 100px;
+            max-height: 80px;
+            margin-bottom: 8px;
         }
 
         .billto {
-            margin-top: 15px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 11px;
         }
 
         .billto strong {
             display: block;
-            margin-bottom: 3px;
+            margin-bottom: 5px;
         }
 
         table.items {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 8px;
-            font-size: 12px;
+            margin-bottom: 20px;
         }
 
-        table.items th {
-            text-align: left;
-            border: 1px solid #000;
-            padding: 6px;
-            font-weight: bold;
-            background: #fff;
-        }
-
+        table.items th,
         table.items td {
             border: 1px solid #000;
             padding: 6px;
+            vertical-align: top;
+        }
+
+        table.items th {
+            font-weight: bold;
+            background: #f5f5f5;
+            text-align: left;
+        }
+
+        .item-image {
+            max-width: 50px;
+            max-height: 50px;
+            object-fit: cover;
+        }
+
+        .no-image {
+            width: 50px;
+            height: 50px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            color: #999;
         }
 
         .right {
             text-align: right;
         }
 
+        .center {
+            text-align: center;
+        }
+
         .notes {
-            margin-top: 12px;
-            font-size: 12px;
+            margin-top: 15px;
+            font-size: 11px;
         }
 
         .notes strong {
             display: block;
-            margin-bottom: 3px;
+            margin-bottom: 5px;
         }
 
         .totals-wrapper {
+            margin-top: 20px;
             width: 100%;
-            margin-top: 15px;
         }
 
         .totals-table {
-            width: 260px;
+            width: 280px;
             margin-left: auto;
             border-collapse: collapse;
+            font-size: 11px;
         }
 
         .totals-table td {
             padding: 4px 0;
-            font-size: 13px;
         }
 
         .totals-table .label {
@@ -184,175 +143,202 @@
         }
 
         .grand-total {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
-            padding-top: 6px;
+            padding-top: 8px;
         }
 
         .footer {
-            text-align: center;
             margin-top: 40px;
-            font-size: 12px;
-            color: #555;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
         }
 
-        hr {
-            border: none;
-            border-top: 1px solid #ddd;
-            margin: 15px 0;
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
         }
 
-        /* Print optimization for watermark */
-        @media print {
-            .watermark,
-            .watermark-diagonal,
-            .watermark-pattern {
-                position: fixed;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
+        .status-paid {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .status-pending {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .status-overdue {
+            background-color: #dc3545;
+            color: white;
         }
     </style>
 </head>
 
 <body>
+    <div class="container">
+        <!-- Invoice Header -->
+        <table class="invoice-header">
+            <tr>
+                <td>
+                    <h1 class="invoice-title">INVOICE</h1>
 
-    <!-- OPTION 1: Centered Logo Watermark (Recommended) -->
-    <div class="watermark">
-        @if(!empty($company['logo']))
-            <img src="{{ $company['logo'] }}" alt="Watermark">
-        @else
-            <div style="font-size: 60px; font-weight: bold; opacity: 0.1;">{{ $company['company_name'] ?? 'COMPANY' }}</div>
-        @endif
-    </div>
+                    <div class="invoice-details">
+                        <p><strong>Invoice Number:</strong> {{ $invoice->invoice_number }}</p>
+                        <p><strong>Invoice Date:</strong> {{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M d, Y') }}</p>
+                        <p><strong>Due Date:</strong> {{ \Carbon\Carbon::parse($invoice->due_date)->format('M d, Y') }}</p>
+                        <p>
+                            <strong>Status:</strong>
+                            <span class="status-badge status-{{ $invoice->status }}">
+                                {{ strtoupper($invoice->status) }}
+                            </span>
+                        </p>
+                    </div>
+                </td>
 
-    <!-- OPTION 2: Diagonal Logo Watermark (Uncomment to use instead of Option 1) -->
-    <!--
-    <div class="watermark-diagonal">
-        @if(!empty($company['logo']))
-            <img src="{{ $company['logo'] }}" alt="Watermark">
-        @endif
-    </div>
-    -->
+                <td class="company-details">
 
-    <!-- OPTION 3: Text + Logo Watermark (Uncomment to use instead) -->
-    <!--
-    <div class="watermark-text">
-        {{ strtoupper($company['company_name'] ?? 'INVOICE') }}
-    </div>
-    <div class="watermark">
-        @if(!empty($company['logo']))
-            <img src="{{ $company['logo'] }}" alt="Watermark" style="margin-top: 80px;">
-        @endif
-    </div>
-    -->
-
-    <!-- OPTION 4: Repeating Pattern Watermark (Uncomment to use instead) -->
-    <!--
-    <div class="watermark-pattern" style="background-image: url('{{ $company['logo'] ?? '' }}');">
-    </div>
-    -->
-
-    <!-- HEADER -->
-    <table class="top-header">
-        <tr>
-            <td>
-                <h1 class="title">Invoice</h1>
-
-                <div class="invoice-details">
-                    <p>Invoice ID: <strong>{{ $invoice->invoice_number }}</strong></p>
-                    <p><strong>Invoice Date:</strong> {{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M j, Y') }}</p>
-                    <p><strong>Due Date:</strong> {{ \Carbon\Carbon::parse($invoice->due_date)->format('M j, Y') }}</p>
-                    <p>Status: <strong>{{ strtoupper($invoice->status) }}</strong></p>
-                </div>
-            </td>
-
-            <td class="company-details">
-                <div style="text-align:right;">
-                    <img
-                        src="{{ $company['logo'] }}"
-                        width="80"
-                        height="80"
-                        style="margin-bottom:4px; display:inline-block;">
+                    @if(!empty($company['logo']))
+                    <img src="{{ $company['logo'] }}" class="company-logo" alt="Logo">
                     <br>
+                    @endif
 
                     <strong>{!! $company['company_name'] ?? 'Company Name' !!}</strong><br>
                     {!! $company['company_tagline'] ?? '' !!}<br>
                     {!! $company['company_address'] ?? '' !!}<br>
                     {!! $company['company_email'] ?? '' !!}<br>
                     {!! $company['company_phone'] ?? '' !!}
-                </div>
-            </td>
-        </tr>
-    </table>
-
-    <!-- BILL TO -->
-    <div class="billto">
-        <strong>Bill To:</strong>
-        {{ $invoice->customer->name ?? 'N/A' }} ({{ $invoice->customer->email ?? '' }})<br>
-        {{ $invoice->customer->address ?? '' }}
-    </div>
-
-    <!-- ITEMS TABLE -->
-    <table class="items">
-        <thead>
-            <tr>
-                <th>Description</th>
-                <th class="right" style="width: 70px;">Quantity</th>
-                <th class="right" style="width: 100px;">Unit Price</th>
-                <th class="right" style="width: 100px;">Total</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @foreach($invoice->items as $item)
-            <tr>
-                <td>{{ $item->description }}</td>
-                <td class="right">{{ $item->quantity }}</td>
-                <td class="right">{{ $currency }}{{ number_format($item->unit_price, 2) }}</td>
-                <td class="right">{{ $currency }}{{ number_format($item->total, 2) }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-    <!-- NOTES -->
-    @if($invoice->notes)
-    <div class="notes">
-        <strong>Notes:</strong>
-        {{ $invoice->notes }}
-    </div>
-    @endif
-
-    <!-- TOTALS -->
-    <div class="totals-wrapper">
-        <table class="totals-table">
-            <tr>
-                <td class="label">Subtotal:</td>
-                <td class="value">{{ $currency }}{{ number_format($invoice->subtotal, 2) }}</td>
-            </tr>
-
-            <tr>
-                <td class="label">Tax ({{ number_format($invoice->tax_percent * 100, 0) }}%):</td>
-                <td class="value">
-                    {{ $currency }}{{ number_format($invoice->total - $invoice->subtotal, 2) }}
-                </td>
-            </tr>
-
-            <tr>
-                <td class="label grand-total">Total:</td>
-                <td class="value grand-total">
-                    {{ $currency }}{{ number_format($invoice->total, 2) }}
                 </td>
             </tr>
         </table>
-    </div>
 
-    <!-- FOOTER -->
-    <div class="footer">
-        {{ $company['invoice_footer'] ?? 'Thank you!' }}
-    </div>
+        <!-- Bill To -->
+        <div class="billto">
+            <strong>Bill To:</strong>
+            {{ $invoice->customer->name }} ({{ $invoice->customer->email }})<br>
+            {{ $invoice->customer->address }}
+            @if(!empty($invoice->customer->phone))
+            <br>Phone: {{ $invoice->customer->phone }}
+            @endif
+        </div>
 
+        <!-- Items Table with Images -->
+        <table class="items">
+            <thead>
+                <tr>
+                    <th style="width: 70px;">Image</th>
+                    <th>Description</th>
+                    <th class="right" style="width: 60px;">Qty</th>
+                    <th class="right" style="width: 100px;">Unit Price</th>
+                    <th class="right" style="width: 100px;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($invoice->items as $item)
+                <tr>
+                    <td class="center">
+                        @php
+                        $imageData = null;
+                        $imagePath = $item->image ?? '';
+
+                        if (!empty($imagePath)) {
+                        // Check if it's a URL
+                        if (filter_var($imagePath, FILTER_VALIDATE_URL)) {
+                        try {
+                        $imageContents = @file_get_contents($imagePath);
+                        if ($imageContents !== false) {
+                        $imageData = 'data:image/' . pathinfo($imagePath, PATHINFO_EXTENSION) . ';base64,' . base64_encode($imageContents);
+                        }
+                        } catch (\Exception $e) {
+                        // Silent fail
+                        }
+                        } else {
+                        // Handle storage path
+                        $cleanPath = str_replace('/storage/', '', $imagePath);
+                        $cleanPath = str_replace('storage/', '', $cleanPath);
+
+                        // Try multiple paths
+                        $possiblePaths = [
+                        storage_path('app/public/' . $cleanPath),
+                        public_path('storage/' . $cleanPath),
+                        public_path($imagePath),
+                        ];
+
+                        foreach ($possiblePaths as $path) {
+                        if (file_exists($path) && is_file($path)) {
+                        try {
+                        $imageContents = @file_get_contents($path);
+                        if ($imageContents !== false) {
+                        $extension = pathinfo($path, PATHINFO_EXTENSION);
+                        $imageData = 'data:image/' . $extension . ';base64,' . base64_encode($imageContents);
+                        break;
+                        }
+                        } catch (\Exception $e) {
+                        // Silent fail
+                        }
+                        }
+                        }
+                        }
+                        }
+                        @endphp
+
+                        @if(!empty($imageData))
+                        <img src="{{ $imageData }}" class="item-image" alt="{{ $item->description }}" style="max-width: 60px; max-height: 60px; object-fit: cover;" />
+                        @else
+                        <div class="no-image" style="width: 60px; height: 60px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #999;">
+                            No Image
+                        </div>
+                        @endif
+                    </td>
+                    <td>{{ $item->description }}</td>
+                    <td class="right">{{ $item->quantity }}</td>
+                    <td class="right">{{ $currency }}{{ number_format($item->unit_price, 2) }}</td>
+                    <td class="right">{{ $currency }}{{ number_format($item->total, 2) }}</td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="5" class="center">No items found</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+
+        <!-- Notes -->
+        @if($company['invoice_notes'] ?? false)
+        <div class="notes">
+            <strong>Notes:</strong>
+            {!! $company['invoice_notes'] !!}
+        </div>
+        @endif
+
+        <!-- Totals -->
+        <div class="totals-wrapper">
+            <table class="totals-table">
+                <tr>
+                    <td class="label">Subtotal:</td>
+                    <td class="value">{{ $currency }}{{ number_format($invoice->subtotal, 2) }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Tax ({{ number_format($invoice->tax_percent, 0) }}%):</td>
+                    <td class="value">{{ $currency }}{{ number_format($invoice->tax_amount, 2) }}</td>
+                </tr>
+                <tr>
+                    <td class="label grand-total">Total:</td>
+                    <td class="value grand-total">{{ $currency }}{{ number_format($invoice->total, 2) }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            {{ $company['invoice_footer'] ?? 'Thank you for your business!' }}
+        </div>
+    </div>
 </body>
 
 </html>

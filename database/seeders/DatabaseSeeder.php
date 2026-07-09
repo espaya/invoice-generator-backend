@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
         // ]);
         // $this->call(DefaultUserSeed::class);
         // $this->call(CompanySettingSeeder::class);
-        $this->call(AdminSeeder::class);
+        // $this->call(AdminSeeder::class);
+        $this->call(InvoiceNoteSeeder::class);
     }
 }

@@ -18,13 +18,12 @@ Route::get('/ping', function () {
 });
 
 
-
-// Route::middleware('web')->group(function () {
     Route::get('/company-settings', [CompanyController::class, 'index']);
+
     Route::post('/password/reset/request', [PasswordResetController::class, 'sendResetLink']);
     Route::post('/password/reset/confirm', [PasswordResetController::class, 'resetPassword']);
     Route::get('/invoice/public/{invoice_number}', [InvoiceController::class, 'publicDownload']);
-// });
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);

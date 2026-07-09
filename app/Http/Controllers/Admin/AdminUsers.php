@@ -39,7 +39,7 @@ class AdminUsers extends Controller
         }
     }
 
-    public function destroy($id)
+    public function destroy(int $id)
     {
         try {
             $user = User::find($id);
@@ -57,7 +57,7 @@ class AdminUsers extends Controller
         }
     }
 
-    public function view($id)
+    public function view(int $id)
     {
         try {
             $user = User::with('profile', 'customers', 'invoices')->where('id', $id)->first();
@@ -132,10 +132,10 @@ class AdminUsers extends Controller
 
         ]);
 
+        $photoPath = null;
+
         try {
             DB::beginTransaction();
-
-            $photoPath = null;
 
             $dir = "profile_photos";
 
@@ -192,7 +192,7 @@ class AdminUsers extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         $user = User::with('profile')->findOrFail($id);
 
@@ -264,7 +264,7 @@ class AdminUsers extends Controller
             // PHOTO UPDATE
             // ========================
             if ($request->hasFile('photo')) {
-                $dir = "public_profiles";
+                $dir = "profile_photos";
 
                 if (!Storage::disk('public')->exists($dir)) {
                     Storage::disk('public')->makeDirectory($dir);

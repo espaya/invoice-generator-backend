@@ -35,7 +35,8 @@ class CompanyController extends Controller
                 'currency' => $companySetting->currency,
                 'currency_symbol' => $companySetting->currency_symbol,
                 'custom_css' => $companySetting->custom_css,
-                'company_tagline' => $companySetting->company_tagline
+                'company_tagline' => $companySetting->company_tagline,
+                'invoice_notes' => $companySetting->invoice_notes
             ], 200);
         } catch (Exception $ex) {
             Log::error($ex->getMessage());
@@ -64,7 +65,8 @@ class CompanyController extends Controller
             'primary_color' => 'required|string|max:50',
             'secondary_color' => 'required|string|max:50',
             'logo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'company_tagline' => ['nullable', 'string']
+            'company_tagline' => ['nullable', 'string'],
+            'invoice_notes' => ['nullable', 'string']
         ], [
             'company_name.required' => 'Company name is required',
             'invoice_prefix.required' => 'Invoice prefix is required',
@@ -115,6 +117,7 @@ class CompanyController extends Controller
             $companySetting->primary_color = $request->primary_color;
             $companySetting->secondary_color = $request->secondary_color;
             $companySetting->company_tagline = $request->company_tagline;
+            $companySetting->invoice_notes = $request->invoice_notes;
 
             $companySetting->save();
 
@@ -156,7 +159,8 @@ class CompanyController extends Controller
             'secondary_color' => 'nullable|string|max:7',
             'invoice_prefix' => 'nullable|string|max:20',
             'invoice_footer' => 'nullable|string|max:1000',
-            'company_tagline' => ['nullable', 'string']
+            'company_tagline' => ['nullable', 'string'],
+            'invoice_notes' => ['nullable', 'string']
         ], [
             'company_name.required' => 'Company name is required',
             'company_email.required' => 'Company email is required',
@@ -188,7 +192,7 @@ class CompanyController extends Controller
         $companySetting->primary_color = $request->primary_color;
         $companySetting->secondary_color = $request->secondary_color;
         $companySetting->company_tagline = $request->company_tagline;
-
+        $companySetting->invoice_notes = $request->invoice_notes;
         $companySetting->save();
 
         return response()->json([

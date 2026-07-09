@@ -20,6 +20,7 @@ class CompanySetting extends Model
         'currency',
         'currency_symbol',
         'custom_css',
-        'company_tagline'
+        'company_tagline',
+        'invoice_notes'
     ];
 }

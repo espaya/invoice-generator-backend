@@ -10,24 +10,6 @@ use Illuminate\Support\Facades\Log;
 
 class CustomersController extends Controller
 {
-    public function existingCustomers()
-    {
-        try {
-
-            $customers = Customer::orderBy("created_at", "desc")
-                ->get();
-
-            return response()->json($customers, 200);
-        } catch (\Exception $e) {
-            Log::error("Failed to fetch existing customers: " . $e->getMessage());
-
-            return response()->json([
-                "message" => "Failed to fetch existing customers",
-                "error" => $e->getMessage()
-            ], 500);
-        }
-    }
-
     public function index(Request $request)
     {
         try {
@@ -50,13 +32,32 @@ class CustomersController extends Controller
                 ->paginate(20);
 
             if ($customers->count() === 0) {
-                return response()->json(["message" => "No customers found"], 404);
+                return response()->json(["message" => "No customers found"], 200);
             }
 
             return response()->json($customers, 200);
         } catch (\Exception $e) {
+            Log::error($e->getMessage());
             return response()->json([
                 "message" => "Failed to fetch customers",
+                "error" => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function existingCustomers()
+    {
+        try {
+
+            $customers = Customer::orderBy("created_at", "desc")
+                ->get();
+
+            return response()->json($customers, 200);
+        } catch (\Exception $e) {
+            Log::error("Failed to fetch existing customers: " . $e->getMessage());
+
+            return response()->json([
+                "message" => "Failed to fetch existing customers",
                 "error" => $e->getMessage()
             ], 500);
         }

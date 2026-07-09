@@ -9,10 +9,27 @@ class InvoiceItem extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['invoice_id', 'description', 'quantity', 'unit_price', 'total'];
+    protected $fillable = [
+        'invoice_id', 
+        'description', 
+        'quantity', 
+        'unit_price', 
+        'total', 
+        'image'
+        ];
 
     public function invoice()
     {
         return $this->belongsTo(Invoice::class);
     }
+
+    // Accessor for full image url
+    public function getImageUrlAttribute()
+    {
+        if($this->image){
+            return url($this->image);
+        }
+        return null;
+    }
+
 }

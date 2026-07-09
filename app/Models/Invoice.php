@@ -19,7 +19,7 @@ class Invoice extends Model
         'tax_percent',
         'subtotal',
         'total',
-        'notes'
+        'notes',
     ];
 
     public function user()

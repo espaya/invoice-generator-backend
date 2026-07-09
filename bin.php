@@ -234,12 +234,10 @@
 
                     <td class="company-details">
                         <div style="text-align:right;">
-
-                            @if(!empty($company['mail_logo']))
-                            <img src="{{ $company['mail_logo'] }}" class="company-logo" alt="Logo" style="max-width: 150px; max-height: 80px; margin-bottom: 10px;" />
+                            @if(!empty($company['logo']))
+                            <img src="/storage/{{ $company['logo'] }}" class="company-logo" alt="Logo">
                             <br>
                             @endif
-
 
                             <strong>{!! $company['company_name'] ?? 'Company Name' !!}</strong><br>
                             {!! $company['company_tagline'] ?? '' !!}<br>
